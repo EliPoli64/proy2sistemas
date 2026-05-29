@@ -72,7 +72,6 @@ void parseObject(Parser* p, const char* path, FILE* out) {
         if (c == '{') {
             size_t objStart = p->pos;
             next(p);
-            fprintf(out, "%s\t%zu\t%zu\n", path, objStart, (size_t)0);
             expectKey = 1;
             c = peek(p);
             while (c != '}' && c != '\0') {
@@ -99,13 +98,12 @@ void parseObject(Parser* p, const char* path, FILE* out) {
             }
             if (c == '}') {
                 next(p);
-                fprintf(out, "%s\t%zu\t%zu\n", path, objStart, p->pos);
+                fprintf(out, "%s\t%zu\t%zu\n", path, objStart + 1, p->pos);
             }
             return;
         } else if (c == '[') {
             size_t arrStart = p->pos;
             next(p);
-            fprintf(out, "%s\t%zu\t%zu\n", path, arrStart, (size_t)0);
             arrayIndex = 0;
             c = peek(p);
             while (c != ']' && c != '\0') {
@@ -123,7 +121,7 @@ void parseObject(Parser* p, const char* path, FILE* out) {
             }
             if (c == ']') {
                 next(p);
-                fprintf(out, "%s\t%zu\t%zu\n", path, arrStart, p->pos);
+                fprintf(out, "%s\t%zu\t%zu\n", path, arrStart + 1, p->pos);
             }
             return;
         } else if (c == '"') {
@@ -135,7 +133,7 @@ void parseObject(Parser* p, const char* path, FILE* out) {
             }
             size_t valEnd = p->pos;
             if (p->src[p->pos] == '"') p->pos++;
-            fprintf(out, "%s\t%zu\t%zu\n", path, strStart, p->pos);
+            fprintf(out, "%s\t%zu\t%zu\n", path, strStart + 1, p->pos);
             return;
         } else if ((c >= '0' && c <= '9') || c == '-' || c == 't' || c == 'f' || c == 'n') { // numero, letra, true, false, null
             size_t valStart = p->pos;
@@ -148,7 +146,7 @@ void parseObject(Parser* p, const char* path, FILE* out) {
             ) {
                 p->pos++;
             }
-            fprintf(out, "%s\t%zu\t%zu\n", path, valStart, p->pos);
+            fprintf(out, "%s\t%zu\t%zu\n", path, valStart + 1, p->pos);
             return;
         } else if (c == ',') {
             next(p);
