@@ -10,17 +10,26 @@ typedef struct {
     size_t pos;
 } Parser;
 
-typedef struct node {
+typedef struct {
+    char path[512];
     size_t start;
     size_t end;
-    char* lexema;
-    int arrayIndex; // -1 si no esta en array, 0 en adelante si lo esta
-    int nivel;
-    struct node* next;
-    
-} Node;
+} LineaSalida;
 
+typedef struct {
+    LineaSalida* lines;
+    int count;
+    int capacity;
+} BufferSalida;
+
+/** @brief avanza sobre espacios en blanco y retorna el siguiente caracter */
 char peek(Parser* p);
+
+/** @brief avanza al siguiente caracter en el parser */
 char next(Parser* p);
-void imprimirLista(Node* nodo, char* ruta, FILE* jnx);
-void parseObject(Parser* p, const char* path, FILE* out);
+
+/** @brief parsea recursivamente un json y registra todas las rutas y posiciones */
+void parsear(Parser* p, const char* path, FILE* out);
+
+/** @brief ordena e imprime todas las lineas de salida al archivo */
+void imprimirBufferSalida(FILE* out);

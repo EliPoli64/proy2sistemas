@@ -1,27 +1,26 @@
 #include "include/libjsonindex.h"
 
 int main() {
-  FILE* jsonFile = fopen("sample.json", "r");
-  if (!jsonFile) {
+  FILE* jsonOriginal = fopen("sample.json", "r");
+  if (!jsonOriginal) {
     perror("error al abrir sample.json");
     return 1;
   }
 
-  // Get file size
-  fseek(jsonFile, 0, SEEK_END);
-  long size = ftell(jsonFile);
-  fseek(jsonFile, 0, SEEK_SET);
+  fseek(jsonOriginal, 0, SEEK_END);
+  long size = ftell(jsonOriginal);
+  fseek(jsonOriginal, 0, SEEK_SET); // obtener tamanno archivo
 
   char* src = malloc(size + 1);
   if (!src) {
     perror("error de asignacion de memoria");
-    fclose(jsonFile);
+    fclose(jsonOriginal);
     return 1;
   }
 
-  size_t readBytes = fread(src, 1, size, jsonFile);
+  size_t readBytes = fread(src, 1, size, jsonOriginal);
   src[readBytes] = '\0';
-  fclose(jsonFile);
+  fclose(jsonOriginal);
 
   Parser p = {
     .src = src,
@@ -34,7 +33,8 @@ int main() {
     free(src);
     return 1;
   }
-  parseObject(&p, "", out);
+  parsear(&p, "", out);
+  imprimirBufferSalida(out);
   fclose(out);
   free(src);
   return 0;
