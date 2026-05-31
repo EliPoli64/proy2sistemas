@@ -179,12 +179,11 @@ void parsear(Parser* p, const char* path, FILE* out) {
     }
 }
 
-/* ─── helpers para la busqueda ──────────────────────────────────────── */
 /** @brief busca en el archivo .jnx usando una expresion regular y retorna los
  * valores del JSON original */
-SearchResult buscar(const char *jnxFilePath, const char *jsonFilePath,
+ResultadoBusq buscar(const char *jnxFilePath, const char *jsonFilePath,
                         const char *regexPattern) {
-  SearchResult result = {NULL, 0, 0};
+  ResultadoBusq result = {NULL, 0, 0};
   regex_t regex;
   int regexCompiled = 0;
   char *effectivePattern = NULL;
@@ -247,39 +246,43 @@ SearchResult buscar(const char *jnxFilePath, const char *jsonFilePath,
     if (sscanf(line, "%s\t%zu\t%zu", path, &start, &end) != 3) continue;
     if (regexec(&regex, path, 0, NULL, 0) != 0) continue;
 
-    /* extrae el valor y comprime si es objeto o array */
+    /* extrae el valor */
     size_t len = end - start + 1;
     char *value = (char *)malloc(len + 1);
     if (!value) continue;
     strncpy(value, jsonContent + start, len);
     value[len] = '\0';
     
+    /* para objetos o arrays, elimina whitespace pero mantiene llaves */
     if (value[0] == '{' || value[0] == '[') {
-      char *compressed = (char *)malloc(len + 1);
-      if (compressed) {
-        int j = 0, inString = 0;
-        for (size_t i = 0; i < len; i++) {
-          if (value[i] == '"') {
-            inString = !inString;
-            compressed[j++] = value[i];
-          } else if (!inString && (value[i] == ' ' || value[i] == '\t' || 
-                     value[i] == '\n' || value[i] == '\r')) {
-            continue;
-          } else {
-            compressed[j++] = value[i];
-          }
-        }
-        compressed[j] = '\0';
+      char *clean = (char *)malloc(len + 1);
+      if (!clean) {
         free(value);
-        value = compressed;
+        continue;
       }
+      int j = 0;
+      int inString = 0;
+      for (size_t i = 0; i < len; i++) {
+        char c = value[i];
+        if (c == '"') {
+          inString = !inString;
+          clean[j++] = c;
+        } else if (!inString && (c == ' ' || c == '\t' || c == '\n' || c == '\r')) {
+          continue; /* salta whitespace */
+        } else {
+          clean[j++] = c;
+        }
+      }
+      clean[j] = '\0';
+      free(value);
+      value = clean;
     }
     
     if (result.count >= result.capacity) {
       result.capacity = result.capacity == 0 ? 10 : result.capacity * 2;
       result.values = (char **)realloc(result.values, result.capacity * sizeof(char *));
       if (!result.values) {
-        perror("Fallo la reasignacion de memoria para SearchResult.values");
+        perror("Fallo la reasignacion de memoria para ResultadoBusq.values");
         free(value);
         goto cleanup;
       }
@@ -293,4 +296,16 @@ cleanup:
   if (regexCompiled) regfree(&regex);
   free(effectivePattern);
   return result;
+}
+
+/** @brief libera la memoria de un ResultadoBusq */
+void liberarResultado(ResultadoBusq* result) {
+  if (!result) return;
+  for (int i = 0; i < result->count; i++) {
+    free(result->values[i]);
+  }
+  free(result->values);
+  result->values = NULL;
+  result->count = 0;
+  result->capacity = 0;
 }

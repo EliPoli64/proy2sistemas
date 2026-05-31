@@ -37,6 +37,20 @@ static int esNull(const char* str) {
     return (strcmp(str, "null") == 0);
 }
 
+static char* cortarEspacio(const char *s) {
+  if (!s) return NULL;
+  const char *start = s;
+  while (*start == ' ' || *start == '\t' || *start == '\n' || *start == '\r') start++;
+  const char *end = s + strlen(s) - 1;
+  while (end >= start && (*end == ' ' || *end == '\t' || *end == '\n' || *end == '\r')) end--;
+  size_t len = (end >= start) ? (end - start + 1) : 0;
+  char *out = malloc(len + 1);
+  if (!out) return NULL;
+  if (len) memcpy(out, start, len);
+  out[len] = '\0';
+  return out;
+}
+
 int main(int argc, char* argv[]) {
   if (argc < 2) {
     fprintf(stderr, "Uso: %s [index <archivojson>] | [search <archivojson> <caminoconregex>]\n", argv[0]);
@@ -45,7 +59,7 @@ int main(int argc, char* argv[]) {
 
   if (strcmp(argv[1], "index") == 0) {
     if (argc < 3) {
-      fprintf(stderr, "Uso: %s index <json_file>\n", argv[0]);
+      fprintf(stderr, "Uso: %s index <archivojson>\n", argv[0]);
       return 1;
     }
     const char* jsonFileName = argv[2];
@@ -96,22 +110,26 @@ int main(int argc, char* argv[]) {
     char jnxFileName[256];
     snprintf(jnxFileName, sizeof(jnxFileName), "%.*s.jnx", (int)(strlen(jsonFileName) - 5), jsonFileName);
 
-    SearchResult results = buscar(jnxFileName, jsonFileName, regexPattern);
+    ResultadoBusq results = buscar(jnxFileName, jsonFileName, regexPattern);
 
     printf("[");
     for (int i = 0; i < results.count; i++) {
-        if (esNumerico(results.values[i])) {
-            printf("%s", results.values[i]);
-        } else if (esBooleano(results.values[i])) {
-            printf("%s", results.values[i]);
-        } else if (esNull(results.values[i])) {
-            printf("%s", results.values[i]);
-        } else {
-            printf("\"%s\"", results.values[i]);
-        }
-        if (i != results.count - 1) printf(", ");
+      char *trimmed = cortarEspacio(results.values[i]);
+      if (!trimmed) trimmed = results.values[i];
+      if (trimmed[0] == '{' || trimmed[0] == '[') {
+        printf("%s", trimmed);
+      } else if (strchr(trimmed, ':') != NULL) {
+        printf("{%s}", trimmed);
+      } else if (esNumerico(trimmed) || esBooleano(trimmed) || esNull(trimmed)) {
+        printf("%s", trimmed);
+      } else {
+        printf("\"%s\"", trimmed);
+      }
+      if (trimmed != results.values[i]) free(trimmed);
+      if (i != results.count - 1) printf(", ");
     }
     printf("]\n");
+    liberarResultado(&results);
   } else {
     fprintf(stderr, "Comando desconocido: %s\n", argv[1]);
     fprintf(stderr, "Uso: %s [index <archivojson>] | [search <archivojson> <caminoconregex>]\n", argv[0]);

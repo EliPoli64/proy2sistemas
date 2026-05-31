@@ -29,7 +29,7 @@ typedef struct {
     char** values;
     int count;
     int capacity;
-} SearchResult;
+} ResultadoBusq;
 
 /** @brief avanza sobre espacios en blanco y retorna el siguiente caracter */
 char peek(Parser* p);
@@ -44,7 +44,7 @@ void parsear(Parser* p, const char* path, FILE* out);
 void imprimirBufferSalida(FILE* out);
 
 /** @brief busca en el archivo .jnx usando una expresion regular y retorna los valores del JSON original */
-SearchResult buscar(const char* jnxFilePath, const char* jsonFilePath, const char* regexPattern);
+ResultadoBusq buscar(const char* jnxFilePath, const char* jsonFilePath, const char* regexPattern);
 
-/** @brief libera la memoria de un SearchResult */
-void freeSearchResult(SearchResult* result);
+/** @brief libera la memoria de un ResultadoBusq */
+void liberarResultado(ResultadoBusq* result);
