@@ -44,7 +44,7 @@ void parsear(Parser* p, const char* path, FILE* out);
 void imprimirBufferSalida(FILE* out);
 
 /** @brief busca en el archivo .jnx usando una expresion regular y retorna los valores del JSON original */
-SearchResult searchJson(const char* jnxFilePath, const char* jsonFilePath, const char* regexPattern);
+SearchResult buscar(const char* jnxFilePath, const char* jsonFilePath, const char* regexPattern);
 
 /** @brief libera la memoria de un SearchResult */
 void freeSearchResult(SearchResult* result);

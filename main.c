@@ -2,10 +2,44 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+
+static int esNumerico(const char* str) {
+    if (str == NULL || *str == '\0') return 0;
+    if (*str == '-') str++;
+    if (*str == '\0') return 0;
+    int hasDigit = 0;
+    int hasDecimal = 0;
+    while (*str) {
+        if (*str >= '0' && *str <= '9') {
+            hasDigit = 1;
+        } else if (*str == '.') {
+            if (hasDecimal) return 0;
+            hasDecimal = 1;
+        } else if (*str == 'e' || *str == 'E') {
+            str++;
+            if (*str == '+' || *str == '-') str++;
+            while (*str >= '0' && *str <= '9') str++;
+            return (*str == '\0');
+        } else {
+            return 0;
+        }
+        str++;
+    }
+    return hasDigit;
+}
+
+static int esBooleano(const char* str) {
+    return (strcmp(str, "true") == 0 || strcmp(str, "false") == 0);
+}
+
+static int esNull(const char* str) {
+    return (strcmp(str, "null") == 0);
+}
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
-    fprintf(stderr, "Uso: %s [index <json_file>] | [search <json_file> <regex_path>]\n", argv[0]);
+    fprintf(stderr, "Uso: %s [index <archivojson>] | [search <archivojson> <caminoconregex>]\n", argv[0]);
     return 1;
   }
 
@@ -41,9 +75,7 @@ int main(int argc, char* argv[]) {
       .pos = 0
     };
 
-    char jnxFileName[256];
-    snprintf(jnxFileName, sizeof(jnxFileName), "%.*s.jnx", (int)(strlen(jsonFileName) - 5), jsonFileName); // Remove .json extension
-    FILE* out = fopen(jnxFileName, "w");
+    FILE* out = fopen("datos.jnx", "w");
     if (!out) {
       perror("error al abrir el archivo .jnx");
       free(src);
@@ -55,27 +87,34 @@ int main(int argc, char* argv[]) {
     free(src);
   } else if (strcmp(argv[1], "search") == 0) {
     if (argc < 4) {
-      fprintf(stderr, "Uso: %s search <json_file> <regex_path>\n", argv[0]);
+      fprintf(stderr, "Uso: %s search <archivojson> <caminoconregex>\n", argv[0]);
       return 1;
     }
     const char* jsonFileName = argv[2];
     const char* regexPattern = argv[3];
 
     char jnxFileName[256];
-    snprintf(jnxFileName, sizeof(jnxFileName), "%.*s.jnx", (int)(strlen(jsonFileName) - 5), jsonFileName); // Remove .json extension
+    snprintf(jnxFileName, sizeof(jnxFileName), "%.*s.jnx", (int)(strlen(jsonFileName) - 5), jsonFileName);
 
-    SearchResult results = searchJson(jnxFileName, jsonFileName, regexPattern);
+    SearchResult results = buscar(jnxFileName, jsonFileName, regexPattern);
 
     printf("[");
     for (int i = 0; i < results.count; i++) {
-        printf("%s%s", results.values[i], (i == results.count - 1 ? "" : ", "));
+        if (esNumerico(results.values[i])) {
+            printf("%s", results.values[i]);
+        } else if (esBooleano(results.values[i])) {
+            printf("%s", results.values[i]);
+        } else if (esNull(results.values[i])) {
+            printf("%s", results.values[i]);
+        } else {
+            printf("\"%s\"", results.values[i]);
+        }
+        if (i != results.count - 1) printf(", ");
     }
     printf("]\n");
-
-    freeSearchResult(&results);
   } else {
     fprintf(stderr, "Comando desconocido: %s\n", argv[1]);
-    fprintf(stderr, "Uso: %s [index <json_file>] | [search <json_file> <regex_path>]\n", argv[0]);
+    fprintf(stderr, "Uso: %s [index <archivojson>] | [search <archivojson> <caminoconregex>]\n", argv[0]);
     return 1;
   }
 
