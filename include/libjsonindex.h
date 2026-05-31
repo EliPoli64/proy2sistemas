@@ -11,40 +11,28 @@ typedef struct {
     size_t pos;
 } Parser;
 
-typedef struct {
-    char path[512];
+typedef struct node {
     size_t start;
     size_t end;
-} LineaSalida;
+    char* lexema;
+    int arrayIndex; // -1 si no esta en array, 0 en adelante si lo esta
+    int nivel;
+    struct node* next;
+    
+} Node;
 
-typedef struct {
-    LineaSalida* lines;
-    int count;
-    int capacity;
-} BufferSalida;
-
-extern BufferSalida bufferSalida;
-
-typedef struct {
-    char** values;
-    int count;
-    int capacity;
-} SearchResult;
-
-/** @brief avanza sobre espacios en blanco y retorna el siguiente caracter */
 char peek(Parser* p);
-
-/** @brief avanza al siguiente caracter en el parser */
 char next(Parser* p);
+void imprimirLista(Node* nodo, char* ruta, FILE* jnx);
+void parseObjeto(Parser* p, const char* path, FILE* out);
 
-/** @brief parsea recursivamente un json y registra todas las rutas y posiciones */
-void parsear(Parser* p, const char* path, FILE* out);
+typedef struct {
+    char* path;
+    size_t byteInicio;
+    size_t byteFin;
+} JnxEntry;
 
-/** @brief ordena e imprime todas las lineas de salida al archivo */
-void imprimirBufferSalida(FILE* out);
-
-/** @brief busca en el archivo .jnx usando una expresion regular y retorna los valores del JSON original */
-SearchResult searchJson(const char* jnxFilePath, const char* jsonFilePath, const char* regexPattern);
-
-/** @brief libera la memoria de un SearchResult */
-void freeSearchResult(SearchResult* result);
+JnxEntry* parsearJnx(const char* pathJNX, int* numeroEntradas);
+JnxEntry* filtrarEntradasRegex(JnxEntry* entries, int numeroEntradas, const char* patronRegex, int* totalCoincidencias);
+char* leerValorJson(const char* pathJson, size_t byteInicio, size_t byteFin);
+char** recuperarValoresJson(const char* pathJNX, const char* pathJson, const char* patronRegex, int* totalCoincidencias);
