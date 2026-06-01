@@ -101,10 +101,7 @@ int main(int argc, char* argv[]) {
     const char* jsonFileName = argv[2];
     const char* regexPattern = argv[3];
 
-    char jnxFileName[256];
-    snprintf(jnxFileName, sizeof(jnxFileName), "%.*s.jnx", (int)(strlen(jsonFileName) - 5), jsonFileName);
-
-    ResultadoBusq results = buscar(jnxFileName, jsonFileName, regexPattern);
+    ResultadoBusq results = buscar("datos.jnx", jsonFileName, regexPattern);
 
     printf("[");
     for (int i = 0; i < results.count; i++) {
