@@ -28,8 +28,7 @@ void agregarLineaSalida(const char *path, size_t start, size_t end) {
   bufferSalida.count++;
 }
 
-/** @brief compara dos lineas de salida por posicion inicial para ordenamiento
- */
+/** @brief compara dos lineas de salida por posicion inicial para ordenamiento */
 int compararLineasSalida(const void *a, const void *b) {
   const LineaSalida *lineA = (const LineaSalida *)a;
   const LineaSalida *lineB = (const LineaSalida *)b;
@@ -190,7 +189,7 @@ ResultadoBusq buscar(const char *jnxFilePath, const char *jsonFilePath,
   FILE *jnxFile = NULL;
   char *jsonContent = NULL;
 
-  /* 1. construye el regex */
+  /* construye el regex */
   if (regexPattern[0] == '$') {
     effectivePattern = (char *)malloc(strlen(regexPattern) + 1);
     if (!effectivePattern) goto cleanup;
@@ -210,7 +209,7 @@ ResultadoBusq buscar(const char *jnxFilePath, const char *jsonFilePath,
   }
   regexCompiled = 1;
 
-  /* 2. abre el .jnx y se salta el encabezado (dos lineas primeras) */
+  /* abre el .jnx y se salta el encabezado (dos lineas primeras) */
   jnxFile = fopen(jnxFilePath, "r");
   if (!jnxFile) {
     perror("Error al abrir el archivo .jnx");
@@ -218,9 +217,8 @@ ResultadoBusq buscar(const char *jnxFilePath, const char *jsonFilePath,
   }
   char line[1024];
   if (fgets(line, sizeof(line), jnxFile) == NULL) goto cleanup;
-  if (fgets(line, sizeof(line), jnxFile) == NULL) goto cleanup;
 
-  /* 3. lee todo el contenido del json */
+  /* lee todo el contenido del json */
   FILE *f = fopen(jsonFilePath, "r");
   if (!f) {
     perror("Error al abrir el archivo");
@@ -239,7 +237,7 @@ ResultadoBusq buscar(const char *jnxFilePath, const char *jsonFilePath,
   jsonContent[readBytes] = '\0';
   fclose(f);
 
-  /* 4. escanea las lineas del .jnx, coincide con regex y extrae valores */
+  /* escanea las lineas del .jnx, coincide con regex y extrae valores */
   while (fgets(line, sizeof(line), jnxFile) != NULL) {
     char path[512];
     size_t start, end;

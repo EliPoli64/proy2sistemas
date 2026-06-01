@@ -4,7 +4,8 @@
 #include <string.h>
 #include <ctype.h>
 
-static int esNumerico(const char* str) {
+/** @brief revisa si un string es un numero para colocar quotes o no */
+int esNumerico(const char* str) {
     if (str == NULL || *str == '\0') return 0;
     if (*str == '-') str++;
     if (*str == '\0') return 0;
@@ -29,15 +30,8 @@ static int esNumerico(const char* str) {
     return hasDigit;
 }
 
-static int esBooleano(const char* str) {
-    return (strcmp(str, "true") == 0 || strcmp(str, "false") == 0);
-}
-
-static int esNull(const char* str) {
-    return (strcmp(str, "null") == 0);
-}
-
-static char* cortarEspacio(const char *s) {
+/** @brief sanitiza char* quitando espacios */
+char* cortarEspacio(const char *s) {
   if (!s) return NULL;
   const char *start = s;
   while (*start == ' ' || *start == '\t' || *start == '\n' || *start == '\r') start++;
@@ -114,13 +108,14 @@ int main(int argc, char* argv[]) {
 
     printf("[");
     for (int i = 0; i < results.count; i++) {
-      char *trimmed = cortarEspacio(results.values[i]);
+      char* trimmed = cortarEspacio(results.values[i]);
       if (!trimmed) trimmed = results.values[i];
       if (trimmed[0] == '{' || trimmed[0] == '[') {
         printf("%s", trimmed);
       } else if (strchr(trimmed, ':') != NULL) {
         printf("{%s}", trimmed);
-      } else if (esNumerico(trimmed) || esBooleano(trimmed) || esNull(trimmed)) {
+      } else if (esNumerico(trimmed) || strcmp(trimmed, "true") == 0 ||
+                strcmp(trimmed, "false") == 0 || strcmp(trimmed, "null") == 0) {
         printf("%s", trimmed);
       } else {
         printf("\"%s\"", trimmed);
